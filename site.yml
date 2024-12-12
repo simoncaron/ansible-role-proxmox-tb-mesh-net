@@ -1,4 +1,0 @@
----
-- hosts: pvenuc
-  roles:
-    - proxmox_mesh_tb_network
