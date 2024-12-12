@@ -1,0 +1,11 @@
+---
+proxmox_mesh_tb_network_node_number: 1
+
+proxmox_mesh_tb_network_interface_mapping:
+  - name: eno2
+    port_number: 1
+    pcie_id: pci-0000:00:0d.3
+
+  - name: eno3
+    port_number: 2
+    pcie_id: pci-0000:00:0d.2

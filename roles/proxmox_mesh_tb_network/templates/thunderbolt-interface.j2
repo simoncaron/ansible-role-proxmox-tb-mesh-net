@@ -1,0 +1,14 @@
+auto lo:0
+iface lo:0 inet static
+        address 10.0.0.8{{ proxmox_mesh_tb_network_node_number }}/32
+
+auto lo:6
+iface lo:6 inet static
+        address fc00::8{{ proxmox_mesh_tb_network_node_number }}/128
+
+{% for interface in proxmox_mesh_tb_network_interface_mapping %}
+allow-hotplug {{ interface.name }}
+iface {{ interface.name }} inet manual
+        mtu 65520
+
+{% endfor %}

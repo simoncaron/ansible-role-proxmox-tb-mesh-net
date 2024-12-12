@@ -1,0 +1,45 @@
+---
+- name: Load Kernel Modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    persistent: present
+  with_items:
+    - thunderbolt
+    - thunderbolt-net
+
+- name: Prepare /etc/network/interfaces
+  ansible.builtin.blockinfile:
+    path: /etc/network/interfaces
+    insertbefore: "^auto vmbr0"
+    block: |
+      {%- for interface in proxmox_mesh_tb_network_interface_mapping -%}
+      iface  {{ interface.name }} inet manual
+      {% endfor %}
+    append_newline: true
+
+- name: Rename thunderbolt connections
+  ansible.builtin.template:
+    src: thunderbolt.link.j2
+    dest: /etc/systemd/network/00-thunderbolt{{ item.port_number }}.link
+    mode: "644"
+  loop: "{{ proxmox_mesh_tb_network_interface_mapping }}"
+  loop_control:
+    index_var: idx
+
+- name: Set Interfaces to UP on reboots and cable insertions
+  notify:
+    - update initramfs
+    - reboot
+  block:
+    - name: Create udev cable insertion rule
+      ansible.builtin.template:
+        src: 10-tb-en.rules.j2
+        dest: /etc/udev/rules.d/10-tb-en.rules
+        mode: "644"
+
+    - name: Create udev interface up script
+      ansible.builtin.template:
+        src: pve-enoX.sh.j2
+        dest: /usr/local/bin/pve-{{ item.name }}.sh
+        mode: "755"
+      loop: "{{ proxmox_mesh_tb_network_interface_mapping }}"

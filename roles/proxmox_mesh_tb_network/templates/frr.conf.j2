@@ -1,0 +1,22 @@
+frr version {{ frr_version }}
+frr defaults traditional
+hostname {{ inventory_hostname }}
+log syslog informational
+service integrated-vtysh-config
+!
+{% for interface in proxmox_mesh_tb_network_interface_mapping %}
+interface {{ interface.name }}
+ ipv6 router openfabric 1
+exit
+!
+{% endfor %}
+interface lo
+ ip router openfabric 1
+ ipv6 router openfabric 1
+ openfabric passive
+exit
+!
+router openfabric 1
+ net 49.0000.0000.000{{ proxmox_mesh_tb_network_node_number }}.00
+exit
+!

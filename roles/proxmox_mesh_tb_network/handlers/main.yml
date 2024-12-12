@@ -1,0 +1,25 @@
+---
+- name: Update initramfs
+  listen:
+    - update initramfs
+  ansible.builtin.command: # noqa: no-changed-when
+    cmd: >
+      update-initramfs -u -k all
+
+- name: Reboot server
+  listen:
+    - reboot
+  ansible.builtin.reboot:
+
+- name: Restart frr
+  listen:
+    - restart frr
+  ansible.builtin.service:
+    name: frr
+    state: restarted
+
+- name: Reload systemd daemon config
+  listen:
+    - daemon-reload
+  ansible.builtin.systemd_service:
+    daemon_reload: true

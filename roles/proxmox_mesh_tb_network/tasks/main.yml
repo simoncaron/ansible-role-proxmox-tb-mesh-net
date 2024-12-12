@@ -1,0 +1,9 @@
+---
+- name: Thunderbolt Networking
+  ansible.builtin.include_tasks: proxmox-tb-net.yml
+
+- name: Ensure modules are loaded and interfaces are up
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable Dual Stack (IPv4 and IPv6) OpenFabric Routing
+  ansible.builtin.include_tasks: dual-stack-openfabric-mesh.yml

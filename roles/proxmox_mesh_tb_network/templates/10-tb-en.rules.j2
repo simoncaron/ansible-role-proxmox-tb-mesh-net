@@ -1,0 +1,3 @@
+{% for interface in proxmox_mesh_tb_network_interface_mapping %}
+ACTION=="move", SUBSYSTEM=="net", KERNEL=="{{ interface.name }}", RUN+="/usr/local/bin/pve-{{ interface.name }}.sh"
+{% endfor %}
