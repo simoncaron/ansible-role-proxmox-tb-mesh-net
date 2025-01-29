@@ -1,6 +1,0 @@
-[Unit]
-BindsTo=sys-subsystem-net-devices-eno2.device
-After=sys-subsystem-net-devices-eno2.device
-
-# BindsTo={% for interface in proxmox_mesh_tb_network_interface_mapping %}sys-subsystem-net-devices-{{ interface.name }}.device {% endfor %}
-# After={% for interface in proxmox_mesh_tb_network_interface_mapping %}sys-subsystem-net-devices-{{ interface.name }}.device {% endfor %}

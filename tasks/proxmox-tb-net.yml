@@ -7,13 +7,23 @@
     - thunderbolt
     - thunderbolt-net
 
+- name: Remove thunderbolt interfaces
+  ansible.builtin.lineinfile:
+    path: /etc/network/interfaces
+    state: absent
+    regexp: '^iface thunderbolt'
+
 - name: Prepare /etc/network/interfaces
   ansible.builtin.blockinfile:
     path: /etc/network/interfaces
+    marker: "# {mark} interfaces"
     insertbefore: "^auto vmbr0"
     block: |
       {%- for interface in proxmox_mesh_tb_network_interface_mapping -%}
-      iface  {{ interface.name }} inet manual
+      auto {{ interface.name }}
+      iface {{ interface.name }} inet static
+              mtu {{ interface.mtu }}
+
       {% endfor %}
     append_newline: true
 
@@ -39,7 +49,7 @@
 
     - name: Create udev interface up script
       ansible.builtin.template:
-        src: pve-enoX.sh.j2
+        src: pve-interface.sh.j2
         dest: /usr/local/bin/pve-{{ item.name }}.sh
         mode: "755"
       loop: "{{ proxmox_mesh_tb_network_interface_mapping }}"

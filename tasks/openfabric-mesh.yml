@@ -1,0 +1,69 @@
+---
+- name: Define Mesh Network VM Bridge
+  ansible.builtin.blockinfile:
+    path: /etc/network/interfaces
+    marker: "# {mark} bridge"
+    insertbefore: "^source /etc/network/interfaces.d"
+    block: |
+      auto vmbr1
+      iface vmbr1 inet static
+              address {{ proxmox_mesh_tb_network_vm_bridge_ip }}
+              bridge-ports none
+              bridge-stp off
+              bridge-fd 0
+
+              # hook scripts
+              post-up echo 1 > /proc/sys/net/ipv4/ip_forward
+      {% for interface in proxmox_mesh_tb_network_interface_mapping %}
+              post-up iptables -t nat -A POSTROUTING -o {{ interface.name }} -j MASQUERADE
+      {% endfor %}
+      {% for interface in proxmox_mesh_tb_network_interface_mapping %}
+              post-down iptables -t nat -D POSTROUTING -o {{ interface.name }} -j MASQUERADE
+      {% endfor %}
+    append_newline: true
+  notify: restart networking
+
+- name: Load Bridge Interface
+  ansible.builtin.meta: flush_handlers
+
+- name: Install frr package
+  ansible.builtin.apt:
+    name: frr
+
+- name: Enable the fabricd daemon
+  ansible.builtin.lineinfile:
+    path: /etc/frr/daemons
+    regexp: '^fabricd='
+    line: fabricd=yes
+  notify: restart frr
+
+- name: Configure OpenFabric
+  ansible.builtin.template:
+    src: frr.conf.j2
+    dest: /etc/frr/frr.conf
+    mode: "640"
+    owner: frr
+    group: frr
+  notify: restart frr
+
+- name: Copy frr-restarter script
+  ansible.builtin.copy:
+    src: restart-frr.sh
+    dest: /usr/local/bin/restart-frr.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Copy frr-restarter unit file
+  ansible.builtin.copy:
+    src: frr-restarter.service
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable frr-restarter service
+  ansible.builtin.systemd_service:
+    enabled: true
+    name: frr-restarter
+  notify: daemon-reload

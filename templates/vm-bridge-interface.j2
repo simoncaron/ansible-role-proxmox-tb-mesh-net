@@ -1,0 +1,15 @@
+auto vmbr1
+iface vmbr1 inet static
+        address {{ proxmox_mesh_tb_network_vm_bridge_ip }}
+        bridge-ports none
+        bridge-stp off
+        bridge-fd 0
+
+        # hook scripts
+        post-up echo 1 > /proc/sys/net/ipv4/ip_forward
+{% for interface in proxmox_mesh_tb_network_interface_mapping %}
+        post-up iptables -t nat -A POSTROUTING -o {{ interface.name }} -j MASQUERADE
+{% endfor %}
+{% for interface in proxmox_mesh_tb_network_interface_mapping %}
+        post-down iptables -t nat -D POSTROUTING -o {{ interface.name }} -j MASQUERADE
+{% endfor %}

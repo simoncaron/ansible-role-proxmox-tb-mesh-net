@@ -2,7 +2,7 @@
 - name: Update initramfs
   listen:
     - update initramfs
-  ansible.builtin.command: # noqa: no-changed-when
+  ansible.builtin.command:  # noqa: no-changed-when
     cmd: >
       update-initramfs -u -k all
 
@@ -16,6 +16,13 @@
     - restart frr
   ansible.builtin.service:
     name: frr
+    state: restarted
+
+- name: Restart networking
+  listen:
+    - restart networking
+  ansible.builtin.service:
+    name: networking
     state: restarted
 
 - name: Reload systemd daemon config
